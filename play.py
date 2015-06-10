@@ -1,20 +1,33 @@
 from game import Player
 
-p = Player()
-p.dump()
+class Simulation:
+   player = Player()
+   score = 0
 
-while True:
-   try:
-      action = p.reveal if 'r' in raw_input('what: ') else p.mark
-      guess = map(int, raw_input('where: ').split())
-      if len(guess) == 1:
-         x, y = g.board.toCoordinates(guess[0])
-      else:
-         x, y = guess
-   except:
-      print 'bad format, man'
-      continue
-   if x == -1:
-      break
-   action(x, y)
-   p.dump()
+   def sweep(self):
+      while self.player.sweep():
+         print 'Sweeping...'
+
+   def guess(self):
+      print 'Guessing...'
+      self.score += int(self.player.guess())
+
+   def dump(self):
+      self.player.dump()
+      print 'mines hit: {0}'.format(self.score)
+
+   def prompt(self):
+      response = raw_input('')
+      if 's' in response:
+         self.sweep()
+      elif 'g' in response:
+         self.guess()
+      elif 'b' in response:  # 'b' for both
+         self.sweep()
+         self.guess()
+      return 'stop' not in response
+
+
+sim = Simulation()
+while sim.prompt():
+   sim.dump()

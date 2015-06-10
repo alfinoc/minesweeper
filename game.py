@@ -1,4 +1,4 @@
-from random import shuffle
+from random import shuffle, choice
 from BashColor import BashColor as color
 
 MINE_VAL = -1
@@ -87,7 +87,7 @@ class Minesweeper:
       elif hit == 0:
          for i, j in self.board.adjacent(x, y):
             self.reveal(i, j)
-         return False
+      return False
 
    def dump(self, markMask=None):
       self.board.dump(hideMask=self.hidden, markMask=markMask)
@@ -104,12 +104,29 @@ class Player:
    def mark(self, x, y):
       self.marked[self.game.board.toIndex(x, y)] = True
 
+   def unMark(self, x, y):
+      self.marked[self.game.board.toIndex(x, y)] = False
+
    def dump(self):
       self.game.dump(self.marked)
 
    def reveal(self, x, y):
-      self.game.reveal(x, y)
+      return self.game.reveal(x, y)
 
+   def state(self):
+      return self.game.board.masked(self.game.hidden, self.marked)
 
+   # returns true if anything was successfully flagged, false otherwise
+   def sweep(self):
+      state = self.state()
+      indices = range(len(self.marked))
+      return False
+
+   def guess(self):
+      state = self.state()
+      indices = range(len(self.marked))
+      unknown = filter(lambda i : state[i] == HIDDEN_VAL, indices)
+      randomGuess = choice(unknown)
+      return self.reveal(*self.game.board.toCoordinates(randomGuess))
 
 
