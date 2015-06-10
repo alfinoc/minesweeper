@@ -1,11 +1,16 @@
 from random import shuffle
 from BashColor import BashColor as color
 
-MINE_VAL = None
-MINE_DISPLAY = 'X'
-EMPTY_DISPLAY = '_'
-HIDDEN_VAL = -1
-HIDDEN_DISPLAY = '?'
+MINE_VAL = -1
+HIDDEN_VAL = -2
+MARKED_VAL = -3
+
+DISPLAY = {
+   MINE_VAL: color.Red('X'),
+   HIDDEN_VAL: color.DarkGray(' '),
+   MARKED_VAL: color.LightRed('!'),
+   0: color.DarkGray('_')
+}
 
 def toColor(count):
    choices = ['DarkGray', 'Blue', 'Green', 'Magenta', 'Yellow', 'White']
@@ -33,22 +38,24 @@ class Board:
          return adjacent
 
    def format(self, hint):
-      if hint == MINE_VAL:
-         return color.Red(MINE_DISPLAY)
-      elif hint == 0:
-         return color.DarkGray(EMPTY_DISPLAY)
-      else:
-         return color[toColor(hint)](str(hint))
+      return DISPLAY[hint] if hint in DISPLAY else color[toColor(hint)](str(hint))
 
-   def dump(self, mask=None):
+   def dump(self, hideMask=None, markMask=None):
+      masked = self.masked(hideMask, markMask)
+      display = lambda index : masked[index]
       for i in range(0, self.height):
          indices = range(i * self.width, (i + 1) * self.width)
-         def hint(index):
-            if mask == None or mask[index]:
-               return self.grid[index]
-            else:
-               return HIDDEN_DISPLAY
-         print ' '.join(map(self.format, map(hint, indices)))
+         print ' '.join(map(self.format, map(display, indices)))
+
+   def masked(self, hideMask, markMask):
+      def apply(original, mask, replace):
+         indices = range(len(original))
+         swap = lambda i : replace if mask != None and mask[i] else original[i]
+         return map(swap, indices)
+
+      res = apply(self.grid, hideMask, HIDDEN_VAL)
+      res = apply(res, markMask, MARKED_VAL)
+      return res
 
    def adjacent(self, x, y):
       pairs = []
@@ -66,14 +73,14 @@ class Board:
 class Minesweeper:
    def __init__(self, mines=100, width=30, height=30):
       self.board = Board(mines, width, height)
-      self.revealed = [False] * len(self.board.grid)
+      self.hidden = [True] * len(self.board.grid)
 
    # returns True if hit mine, False otherwise
    def reveal(self, x, y):
       index = self.board.toIndex(x, y)
-      if self.revealed[index]:
+      if not self.hidden[index]:
          return False
-      self.revealed[index] = True
+      self.hidden[index] = False
       hit = self.board.hint(x, y)
       if hit == MINE_VAL:
          return True
@@ -82,16 +89,26 @@ class Minesweeper:
             self.reveal(i, j)
          return False
 
+   def dump(self, markMask=None):
+      self.board.dump(hideMask=self.hidden, markMask=markMask)
+   
+   def dimensions(self):
+      return (self.board.width, self.board.height)
+
+class Player:
+   def __init__(self, game=Minesweeper()):
+      self.game = game
+      self.errors = 0
+      self.marked = [False] * len(self.game.hidden)
+
+   def mark(self, x, y):
+      self.marked[self.game.board.toIndex(x, y)] = True
+
    def dump(self):
-      self.board.dump(mask=self.revealed)
-      
+      self.game.dump(self.marked)
 
-
-
-
-
-
-
+   def reveal(self, x, y):
+      self.game.reveal(x, y)
 
 
 

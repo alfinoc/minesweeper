@@ -1,11 +1,12 @@
-from game import Minesweeper
+from game import Player
 
-g = Minesweeper()
-g.dump()
+p = Player()
+p.dump()
 
 while True:
    try:
-      guess = map(int, raw_input('hit me: ').split())
+      action = p.reveal if 'r' in raw_input('what: ') else p.mark
+      guess = map(int, raw_input('where: ').split())
       if len(guess) == 1:
          x, y = g.board.toCoordinates(guess[0])
       else:
@@ -15,5 +16,5 @@ while True:
       continue
    if x == -1:
       break
-   g.reveal(x, y)
-   g.dump()
+   action(x, y)
+   p.dump()
