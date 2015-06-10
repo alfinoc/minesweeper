@@ -113,9 +113,19 @@ class Player:
    def state(self):
       return self.game.board.masked(self.game.hidden, self.marked)
 
-   # returns true if anything was successfully flagged, false otherwise
    def sweep(self):
-      toMark = []
+      def mines(hint, adjacent, marked, unknown):
+         return unknown if len(unknown) == hint - len(marked) else []
+      return self.infer(mines, self.mark)
+
+   def eliminate(self):
+      def safe(hint, adjacent, marked, unknown):
+         return unknown if hint - len(marked) == 0 else []
+      return self.infer(safe, self.reveal)
+
+   # returns true if anything was applied, false otherwise
+   def infer(self, selectFn, applyFn):
+      matching = []
 
       state = self.state()
       indices = range(len(self.marked))
@@ -126,45 +136,15 @@ class Player:
          if hint <= 0:
             continue
 
-         #x, y = self.game.board.toCoordinates(i)
-         #index = lambda pair : self.game.board.toIndex(*pair)
          adjacent = self.game.board.adjacent(i)
          marked = filter(lambda j : state[j] == MARKED_VAL, adjacent)
          unknown = filter(lambda j : state[j] == HIDDEN_VAL, adjacent)
 
-         if len(unknown) == hint - len(marked):
-            for j in unknown:
-               toMark.append(j)
+         matching.extend(selectFn(hint, adjacent, marked, unknown))
 
-      for i in toMark:
-         self.mark(i)
-      return len(toMark) != 0
-
-   def eliminate(self):
-      toMark = []
-
-      state = self.state()
-      indices = range(len(self.marked))
-      for i in indices:
-         hint = state[i]
-
-         # Only consider useful hints.
-         if hint <= 0:
-            continue
-
-         #x, y = self.game.board.toCoordinates(i)
-         #index = lambda pair : self.game.board.toIndex(*pair)
-         adjacent = self.game.board.adjacent(index)
-         marked = filter(lambda j : state[j] == MARKED_VAL, adjacent)
-         unknown = filter(lambda j : state[j] == HIDDEN_VAL, adjacent)
-
-         if hint - len(marked) == 0:
-            for j in unknown:
-               toMark.append(j)
-
-      for i in toMark:
-         self.reveal(i)
-      return len(toMark) != 0
+      for i in matching:
+         applyFn(i)
+      return len(matching) != 0
 
    def guess(self):
       state = self.state()
