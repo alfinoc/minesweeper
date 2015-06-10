@@ -22,11 +22,12 @@ class Simulation:
          self.sweep()
       elif 'g' in response:
          self.guess()
+      elif 'e' in response:
+         self.player.eliminate()
       elif 'b' in response:  # 'b' for both
          self.sweep()
          self.guess()
       return 'stop' not in response
-
 
 sim = Simulation()
 while sim.prompt():

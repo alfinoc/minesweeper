@@ -24,8 +24,8 @@ class Board:
       shuffle(self.grid)
       self.grid = map(self._computeHint, range(len(self.grid)))
 
-   def hint(self, x, y):
-      return self.grid[y * self.width + x]
+   def hint(self, i):
+      return self.grid[i]
 
    def _computeHint(self, index):
       if self.grid[index] == MINE_VAL:
@@ -33,8 +33,8 @@ class Board:
       else:
          x, y = self.toCoordinates(index)
          adjacent = 0
-         for i, j in self.adjacent(x, y):
-            adjacent += int(self.grid[self.toIndex(i, j)] == MINE_VAL)
+         for i in self.adjacent(index):
+            adjacent += int(self.grid[i] == MINE_VAL)
          return adjacent
 
    def format(self, hint):
@@ -57,12 +57,13 @@ class Board:
       res = apply(res, markMask, MARKED_VAL)
       return res
 
-   def adjacent(self, x, y):
+   def adjacent(self, i):
+      x, y = self.toCoordinates(i)
       pairs = []
       for i in range(max(0, x - 1), min(x + 2, self.width)):
          for j in range(max(0, y - 1), min(y + 2, self.height)):
             pairs.append((i, j))
-      return pairs
+      return map(lambda p : self.toIndex(*p), pairs)
 
    def toIndex(self, x, y):
       return x + y * self.width
@@ -76,17 +77,16 @@ class Minesweeper:
       self.hidden = [True] * len(self.board.grid)
 
    # returns True if hit mine, False otherwise
-   def reveal(self, x, y):
-      index = self.board.toIndex(x, y)
-      if not self.hidden[index]:
+   def reveal(self, i):
+      if not self.hidden[i]:
          return False
-      self.hidden[index] = False
-      hit = self.board.hint(x, y)
+      self.hidden[i] = False
+      hit = self.board.hint(i)
       if hit == MINE_VAL:
          return True
       elif hit == 0:
-         for i, j in self.board.adjacent(x, y):
-            self.reveal(i, j)
+         for j in self.board.adjacent(i):
+            self.reveal(j)
       return False
 
    def dump(self, markMask=None):
@@ -101,32 +101,74 @@ class Player:
       self.errors = 0
       self.marked = [False] * len(self.game.hidden)
 
-   def mark(self, x, y):
-      self.marked[self.game.board.toIndex(x, y)] = True
-
-   def unMark(self, x, y):
-      self.marked[self.game.board.toIndex(x, y)] = False
+   def mark(self, i):
+      self.marked[i] = True
 
    def dump(self):
       self.game.dump(self.marked)
 
-   def reveal(self, x, y):
-      return self.game.reveal(x, y)
+   def reveal(self, i):
+      return self.game.reveal(i)
 
    def state(self):
       return self.game.board.masked(self.game.hidden, self.marked)
 
    # returns true if anything was successfully flagged, false otherwise
    def sweep(self):
+      toMark = []
+
       state = self.state()
       indices = range(len(self.marked))
-      return False
+      for i in indices:
+         hint = state[i]
+
+         # Only consider useful hints.
+         if hint <= 0:
+            continue
+
+         #x, y = self.game.board.toCoordinates(i)
+         #index = lambda pair : self.game.board.toIndex(*pair)
+         adjacent = self.game.board.adjacent(i)
+         marked = filter(lambda j : state[j] == MARKED_VAL, adjacent)
+         unknown = filter(lambda j : state[j] == HIDDEN_VAL, adjacent)
+
+         if len(unknown) == hint - len(marked):
+            for j in unknown:
+               toMark.append(j)
+
+      for i in toMark:
+         self.mark(i)
+      return len(toMark) != 0
+
+   def eliminate(self):
+      toMark = []
+
+      state = self.state()
+      indices = range(len(self.marked))
+      for i in indices:
+         hint = state[i]
+
+         # Only consider useful hints.
+         if hint <= 0:
+            continue
+
+         #x, y = self.game.board.toCoordinates(i)
+         #index = lambda pair : self.game.board.toIndex(*pair)
+         adjacent = self.game.board.adjacent(index)
+         marked = filter(lambda j : state[j] == MARKED_VAL, adjacent)
+         unknown = filter(lambda j : state[j] == HIDDEN_VAL, adjacent)
+
+         if hint - len(marked) == 0:
+            for j in unknown:
+               toMark.append(j)
+
+      for i in toMark:
+         self.reveal(i)
+      return len(toMark) != 0
 
    def guess(self):
       state = self.state()
       indices = range(len(self.marked))
       unknown = filter(lambda i : state[i] == HIDDEN_VAL, indices)
       randomGuess = choice(unknown)
-      return self.reveal(*self.game.board.toCoordinates(randomGuess))
-
-
+      return self.reveal(randomGuess)
