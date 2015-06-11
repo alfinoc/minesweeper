@@ -59,13 +59,13 @@ class Board:
       return res
 
    def adjacent(self, i):
-      x, y = self.toCoordinates(i)
-      pairs = []
-      for i in range(max(0, x - 1), min(x + 2, self.width)):
-         for j in range(max(0, y - 1), min(y + 2, self.height)):
-            if (i, j) != (x, y):
-               pairs.append((i, j))
-      return map(lambda p : self.toIndex(*p), pairs)
+      w = self.width
+      cap = len(self.grid)
+      # Ugly but efficient.
+      return filter(lambda index : 0 <= index and index < cap,
+                    [i - w - 1, i - w, i - w + 1,
+                     i - 1, i + 1,
+                     i + w - 1, i + w, i + w + 1])
 
    def toIndex(self, x, y):
       return x + y * self.width
@@ -97,8 +97,6 @@ class Minesweeper:
    def dimensions(self):
       return (self.board.width, self.board.height)
 
-blah = {}
-
 class Player:
    def __init__(self, game=Minesweeper()):
       self.game = game
@@ -113,8 +111,6 @@ class Player:
 
    def mark(self, i, check=False):
       if check and self.game.board.grid[i] != MINE_VAL:
-         blah['i'] = i
-         blah['b'] = self.game.board
          raise ValueError('Marked a non-mine!')
       self.marked[i] = True
 
@@ -158,17 +154,10 @@ class Player:
                                     state[j] == MINE_VAL, adjacent)
          unknown = filter(lambda j : state[j] == HIDDEN_VAL, adjacent)
 
-         debug = selectFn(hint, adjacent, marked, unknown)
-         blah[i] = debug
-         matching.extend(debug)
+         matching.extend(selectFn(hint, adjacent, marked, unknown))
 
       for i in matching:
-         try:
-            applyFn(i)
-         except ValueError:
-            blah['a'] = adjacent
-            blah['m'] = matching
-            raise ValueError('hahah')
+         applyFn(i)
       return len(matching) != 0
 
    def guess(self):

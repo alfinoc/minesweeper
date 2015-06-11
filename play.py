@@ -1,7 +1,7 @@
 from game import Player, Minesweeper
 
 class Simulation:
-   player = Player(game=Minesweeper(mines=150))
+   player = Player(game=Minesweeper(mines=1100, width=100, height=100))
    score = 0
 
    def sweep(self):
@@ -47,5 +47,5 @@ while sim.prompt():
 """
 sim = Simulation()
 sim.auto()
-sim.dump()
+#sim.dump()
 
