@@ -1,4 +1,5 @@
 from random import shuffle, choice
+from functools import partial
 from BashColor import BashColor as color
 
 MINE_VAL = -1
@@ -62,7 +63,8 @@ class Board:
       pairs = []
       for i in range(max(0, x - 1), min(x + 2, self.width)):
          for j in range(max(0, y - 1), min(y + 2, self.height)):
-            pairs.append((i, j))
+            if (i, j) != (x, y):
+               pairs.append((i, j))
       return map(lambda p : self.toIndex(*p), pairs)
 
    def toIndex(self, x, y):
@@ -95,13 +97,25 @@ class Minesweeper:
    def dimensions(self):
       return (self.board.width, self.board.height)
 
+blah = {}
+
 class Player:
    def __init__(self, game=Minesweeper()):
       self.game = game
       self.errors = 0
       self.marked = [False] * len(self.game.hidden)
 
-   def mark(self, i):
+   def complete(self):
+      def mismatched(mark, hide, val):
+         return hide and ((val == MINE_VAL) != mark)
+      full = zip(self.marked, self.game.hidden, self.game.board.grid)
+      return len(filter(lambda t : mismatched(*t), full)) == 0
+
+   def mark(self, i, check=False):
+      if check and self.game.board.grid[i] != MINE_VAL:
+         blah['i'] = i
+         blah['b'] = self.game.board
+         raise ValueError('Marked a non-mine!')
       self.marked[i] = True
 
    def dump(self):
@@ -116,39 +130,51 @@ class Player:
    def sweep(self):
       def mines(hint, adjacent, marked, unknown):
          return unknown if len(unknown) == hint - len(marked) else []
-      return self.infer(mines, self.mark)
+      return self.infer(mines, partial(self.mark, check=True))
 
    def eliminate(self):
       def safe(hint, adjacent, marked, unknown):
          return unknown if hint - len(marked) == 0 else []
       return self.infer(safe, self.reveal)
 
-   # returns true if anything was applied, false otherwise
+   # applies 'applyFn' to every index returned by selectFn when passed
+   # (hint, adjacent, marked, unknown) for every informative hint on the
+   # board. 'applyFn' is only called after all 'selectFn' calls have been
+   # completed. returns true if anything was applied, false otherwise.
    def infer(self, selectFn, applyFn):
       matching = []
 
       state = self.state()
-      indices = range(len(self.marked))
-      for i in indices:
+      for i in xrange(len(self.marked)):
          hint = state[i]
 
-         # Only consider useful hints.
+         # Only consider useful hints that are known.
          if hint <= 0:
             continue
 
          adjacent = self.game.board.adjacent(i)
-         marked = filter(lambda j : state[j] == MARKED_VAL, adjacent)
+
+         marked = filter(lambda j : state[j] == MARKED_VAL or
+                                    state[j] == MINE_VAL, adjacent)
          unknown = filter(lambda j : state[j] == HIDDEN_VAL, adjacent)
 
-         matching.extend(selectFn(hint, adjacent, marked, unknown))
+         debug = selectFn(hint, adjacent, marked, unknown)
+         blah[i] = debug
+         matching.extend(debug)
 
       for i in matching:
-         applyFn(i)
+         try:
+            applyFn(i)
+         except ValueError:
+            blah['a'] = adjacent
+            blah['m'] = matching
+            raise ValueError('hahah')
       return len(matching) != 0
 
    def guess(self):
       state = self.state()
       indices = range(len(self.marked))
       unknown = filter(lambda i : state[i] == HIDDEN_VAL, indices)
-      randomGuess = choice(unknown)
-      return self.reveal(randomGuess)
+      if len(unknown) == 0:
+         return False
+      return self.reveal(choice(unknown))
