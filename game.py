@@ -30,9 +30,7 @@ def toColor(count):
 
 class Board:
    def __init__(self, mines=3, width=4, height=6):
-      adjacent = partial(Board._adjacent, width=width, cap=width * height)
-      self.adjacent = cached(adjacent)
-
+      self.adjacent = cached(self._adjacent)
       self.width = width
       self.height = height
       self.grid = [MINE_VAL] * mines + [0] * (width * height - mines)
@@ -73,22 +71,14 @@ class Board:
       return res
 
    # Cached into public 'Board.adjacent'.
-   @staticmethod
-   def _adjacent(i, width, cap):
-      w = width
-      # Ugly but dec. efficient.
-      return filter(lambda index : 0 <= index and index < cap,
-                   [i - w - 1, i - w, i - w + 1, i - 1, i + 1,
-                    i + w - 1, i + w, i + w + 1])
-
-   # Cached into public 'Board.adjacent'.
-   def _adjacent1(self, i):
-      w = self.width
-      cap = len(self.grid)
-      # Ugly but efficient.
-      return filter(lambda index : 0 <= index and index < cap,
-                   [i - w - 1, i - w, i - w + 1, i - 1, i + 1,
-                    i + w - 1, i + w, i + w + 1])
+   def _adjacent(self, index):
+      x, y = self.toCoordinates(index)
+      pairs = []
+      for i in xrange(max(0, x - 1), min(x + 2, self.width)):
+         for j in xrange(max(0, y - 1), min(y + 2, self.height)):
+            if (i, j) != (x, y):
+               pairs.append((i, j))
+      return map(lambda p : self.toIndex(*p), pairs)
 
    def toIndex(self, x, y):
       return x + y * self.width
