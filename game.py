@@ -13,12 +13,26 @@ DISPLAY = {
    0: color.DarkGray('_')
 }
 
+def cached(fn):
+   cache = {}
+   def checkCache(*args):
+      if args in cache:
+         return cache[args]
+      else:
+         res = fn(*args)
+         cache[args] = res
+         return res
+   return checkCache
+
 def toColor(count):
    choices = ['DarkGray', 'Blue', 'Green', 'Magenta', 'Yellow', 'White']
    return choices[min(count, len(choices) - 1)]
 
 class Board:
    def __init__(self, mines=3, width=4, height=6):
+      adjacent = partial(Board._adjacent, width=width, cap=width * height)
+      self.adjacent = cached(adjacent)
+
       self.width = width
       self.height = height
       self.grid = [MINE_VAL] * mines + [0] * (width * height - mines)
@@ -44,13 +58,13 @@ class Board:
    def dump(self, hideMask=None, markMask=None):
       masked = self.masked(hideMask, markMask)
       display = lambda index : masked[index]
-      for i in range(0, self.height):
-         indices = range(i * self.width, (i + 1) * self.width)
+      for i in xrange(0, self.height):
+         indices = xrange(i * self.width, (i + 1) * self.width)
          print ' '.join(map(self.format, map(display, indices)))
 
    def masked(self, hideMask, markMask):
       def apply(original, mask, replace):
-         indices = range(len(original))
+         indices = xrange(len(original))
          swap = lambda i : replace if mask != None and mask[i] else original[i]
          return map(swap, indices)
 
@@ -58,14 +72,23 @@ class Board:
       res = apply(res, markMask, MARKED_VAL)
       return res
 
-   def adjacent(self, i):
+   # Cached into public 'Board.adjacent'.
+   @staticmethod
+   def _adjacent(i, width, cap):
+      w = width
+      # Ugly but dec. efficient.
+      return filter(lambda index : 0 <= index and index < cap,
+                   [i - w - 1, i - w, i - w + 1, i - 1, i + 1,
+                    i + w - 1, i + w, i + w + 1])
+
+   # Cached into public 'Board.adjacent'.
+   def _adjacent1(self, i):
       w = self.width
       cap = len(self.grid)
       # Ugly but efficient.
       return filter(lambda index : 0 <= index and index < cap,
-                    [i - w - 1, i - w, i - w + 1,
-                     i - 1, i + 1,
-                     i + w - 1, i + w, i + w + 1])
+                   [i - w - 1, i - w, i - w + 1, i - 1, i + 1,
+                    i + w - 1, i + w, i + w + 1])
 
    def toIndex(self, x, y):
       return x + y * self.width
@@ -162,7 +185,7 @@ class Player:
 
    def guess(self):
       state = self.state()
-      indices = range(len(self.marked))
+      indices = xrange(len(self.marked))
       unknown = filter(lambda i : state[i] == HIDDEN_VAL, indices)
       if len(unknown) == 0:
          return False
