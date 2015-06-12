@@ -8,12 +8,18 @@ body {
    margin: auto;
    cursor: crosshair;
    border-collapse: collapse;
+   font-size: 13pt;
 }
 
 #grid td {
    height: 1em;
    width: 1em;
    padding: 0.1em;
+   text-align: center;
+}
+
+#grid td:hover {
+   color: white;
 }
 
 td[color="gray"] {
@@ -43,3 +49,4 @@ td[color="pink"] {
 td[color="red"] {
    color: #C75646;
 }
+

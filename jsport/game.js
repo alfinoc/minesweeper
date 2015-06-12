@@ -15,9 +15,9 @@ Board.MARKED_VAL = -3
 
 Board.DISPLAY = {};
 Board.DISPLAY[Board.MINE_VAL] = ['red', 'X'];
-Board.DISPLAY[Board.HIDDEN_VAL] = ['gray', '?'];
+Board.DISPLAY[Board.HIDDEN_VAL] = ['gray', '&square;'];
 Board.DISPLAY[Board.MARKED_VAL] = ['pink', '!'];
-Board.DISPLAY[0] = ['gray', '_'];
+Board.DISPLAY[0] = ['gray', ' '];
 
 function len(a) {
    return a.length;
@@ -277,5 +277,13 @@ Player.guess = function() {
    if (len(unknown) == 0)
       return false;
    return Player.reveal(unknown[parseInt(Math.random() * unknown.length)]);
+}
+
+function disableselect(e) { return false; }
+function reEnable() { return true; }
+document.onselectstart = new Function('return false');
+if (window.sidebar) {
+   document.onmousedown = disableselect;
+   document.onclick = reEnable;
 }
 
