@@ -1,0 +1,45 @@
+body {
+   background-color: #181814;
+   color: white;
+}
+
+#grid {
+   font-family: monospace;
+   margin: auto;
+   cursor: crosshair;
+   border-collapse: collapse;
+}
+
+#grid td {
+   height: 1em;
+   width: 1em;
+   padding: 0.1em;
+}
+
+td[color="gray"] {
+   color: #5D5D5D;
+}
+
+td[color="blue"] {
+   color: #72B3CC;
+}
+
+td[color="green"] {
+   color: #8EB33B;
+}
+
+td[color="magenta"] {
+   color: #C8A0D1;
+}
+
+td[color="yellow"] {
+   color: #FFE377;
+}
+
+td[color="pink"] {
+   color: #E09690;
+}
+
+td[color="red"] {
+   color: #C75646;
+}
