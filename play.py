@@ -1,7 +1,7 @@
 from game import Player, Minesweeper
 
 class Simulation:
-   player = Player(game=Minesweeper(mines=1200, width=102, height=100))
+   player = Player(game=Minesweeper(mines=100, width=30, height=30))
    score = 0
 
    def sweep(self):
