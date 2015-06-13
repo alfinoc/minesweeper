@@ -19,18 +19,6 @@ Board.DISPLAY[Board.HIDDEN_VAL] = ['gray', '&square;'];
 Board.DISPLAY[Board.MARKED_VAL] = ['pink', '&And;'];
 Board.DISPLAY[0] = ['gray', ' '];
 
-function shuffle(array) {
-   var currentIndex = array.length, temporaryValue, randomIndex;
-   while (0 !== currentIndex) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex -= 1;
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
-   }
-  return array;
-}
-
 Board.init = function(mines, width, height) {
    Board.width = width;
    Board.height = height;
@@ -168,8 +156,8 @@ Minesweeper.dump = function(markMask) {
 
 Player = {};
 
-Player.init = function() {
-   Minesweeper.init(100, 30, 30);
+Player.init = function(mines, width, height) {
+   Minesweeper.init(mines, width, height);
    Player.errors = 0;
    Player.marked = [];
    for (var i = 0; i < Board.grid.length; i++)
@@ -186,13 +174,13 @@ Player.complete = function(self) {
       return hide && ((val == Board.MINE_VAL) != mark);
    }
    for (var i = 0; i < Player.marked.length; i++)
-      if (mismatched(Player.marked[i], Game.hidden[i], Board.grid[i]))
+      if (mismatched(Player.marked[i], Minesweeper.hidden[i], Board.grid[i]))
          return false;
    return true;
 };
 
-Player.mark = function(i, check) {
-   if (check && Minesweeper.board.grid[i] != Board.MINE_VAL)
+Player.mark = function(i) {
+   if (Board.grid[i] != Board.MINE_VAL)
       console.log('Marked a non-mine!');
    Player.marked[i] = true;
 };
@@ -213,14 +201,18 @@ Player.sweep = function() {
    function mines(hint, adjacent, marked, unknown) {
       return unknown.length == hint - marked.length ? unknown : [];
    }
-   return Player.infer(mines, partial(Player.mark, check=true));
+   var res = Player.infer(mines, Player.mark);
+   Player.dump();
+   return res;
 };
 
 Player.eliminate = function() {
    function safe(hint, adjacent, marked, unknown) {
       return hint - marked.length == 0 ? unknown : [];
    }
-   return Player.infer(safe, Player.reveal);
+   var res = Player.infer(safe, Player.reveal);
+   Player.dump();
+   return res;
 };
 
 // applies 'applyFn' to every index returned by selectFn when passed
@@ -251,7 +243,7 @@ Player.infer = function(selectFn, applyFn) {
          matching.push(i);
       });
    }
-   matching.forEach(applyFn(i));
+   matching.forEach(applyFn);
    return matching.length != 0;
 };
 
@@ -264,7 +256,20 @@ Player.guess = function() {
    if (unknown.length == 0)
       return false;
    return Player.reveal(unknown[parseInt(Math.random() * unknown.length)]);
-}
+};
+
+Player.auto = function(interval) {
+   while (!Player.complete()) {
+      var progress = true;
+      while (progress) {
+         progress = false;
+         progress = progress || Player.sweep();
+         progress = progress || Player.eliminate();
+      }
+      Player.guess();
+   }
+   console.log('final score:' + Player.errors);
+};
 
 // Disable selection on the entire page.
 function disableselect(e) { return false; }
@@ -273,4 +278,16 @@ document.onselectstart = new Function('return false');
 if (window.sidebar) {
    document.onmousedown = disableselect;
    document.onclick = reEnable;
+}
+
+function shuffle(array) {
+   var currentIndex = array.length, temporaryValue, randomIndex;
+   while (0 !== currentIndex) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+   }
+  return array;
 }

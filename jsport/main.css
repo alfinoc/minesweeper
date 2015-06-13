@@ -9,9 +9,10 @@ body {
    cursor: crosshair;
    border-collapse: collapse;
    font-size: 13pt;
+   margin-top: 50px;
 }
 
-#grid td {
+td, #grid td {
    height: 1em;
    width: 1em;
    padding: 0.1em;
