@@ -180,9 +180,15 @@ Player.complete = function(self) {
 };
 
 Player.mark = function(i) {
-   if (Board.grid[i] != Board.MINE_VAL)
-      console.log('Marked a non-mine!');
-   Player.marked[i] = true;
+   if (Player.marked[i]) {
+      // Toggle the mark away.
+      Player.marked[i] = false;
+   } else if (Minesweeper.hidden[i]) {
+      // Mark and log the answer.
+      if (Board.grid[i] != Board.MINE_VAL)
+         console.log('Marked a non-mine!');
+      Player.marked[i] = true;
+   }
 };
 
 Player.dump = function() {
