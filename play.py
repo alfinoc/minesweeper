@@ -1,8 +1,17 @@
 from game import Player, Minesweeper
+from guessing import Problem
+
+identity = lambda x : x
 
 class Simulation:
-   player = Player(game=Minesweeper(mines=100, width=30, height=30))
-   score = 0
+   def __init__(self):
+      mines = 3
+      self.player = Player(game=Minesweeper(mines=mines, width=5, height=5))
+      self.score = 0
+      self.undiscovered = mines
+
+   def minesLeft(self):
+      return self.undiscovered - self.score - len(filter(identity, self.player.marked))
 
    def sweep(self):
       while self.player.sweep(): pass
@@ -25,7 +34,7 @@ class Simulation:
       elif 'b' in response:  # 'b' for both
          self.sweep()
          self.guess()
-      return 'stop' not in response
+      return 'stop' not in response and not self.player.complete()
 
    def auto(self, interval=0, verbose=False):
       while not self.player.complete():
@@ -40,9 +49,21 @@ class Simulation:
          self.guess()
       print 'final score:', str(self.score)
 
+   def manual(self):
+      while self.prompt():
+         self.dump()
+
+   def probabilities(self):
+      prob = Problem(self.player.game.board, self.player.state())
+      return prob.probabilities(self.minesLeft())
+
+   def s(self):
+      self.guess()
+      self.dump()
 
 sim = Simulation()
-sim.auto()
-sim.dump()
+
+#sim.auto()
+#sim.dump()
 
 

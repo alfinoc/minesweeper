@@ -163,7 +163,7 @@ Player.init = function(mines, width, height) {
    for (var i = 0; i < Board.grid.length; i++)
       Player.marked.push(false);
    document.querySelector(TABLE_SELECTOR).addEventListener('click', function(evt) {
-      var action = event.shiftKey ? Player.mark : Player.reveal;
+      var action = event.shiftKey ? Player.guardedMark : Player.reveal;
       action(parseInt(evt.srcElement.getAttribute('index')));
       Player.dump();
    });
@@ -180,16 +180,18 @@ Player.complete = function(self) {
 };
 
 Player.mark = function(i) {
+   Player.marked[i] = true;
+};
+
+Player.guardedMark = function(i) {
    if (Player.marked[i]) {
-      // Toggle the mark away.
       Player.marked[i] = false;
    } else if (Minesweeper.hidden[i]) {
-      // Mark and log the answer.
       if (Board.grid[i] != Board.MINE_VAL)
          console.log('Marked a non-mine!');
-      Player.marked[i] = true;
+      Player.mark(i);
    }
-};
+}
 
 Player.dump = function() {
    Minesweeper.dump(Player.marked);
@@ -274,13 +276,13 @@ Player.auto = function(interval) {
       }
       Player.guess();
    }
-   console.log('final score:' + Player.errors);
+   console.log('final score: ' + Player.errors);
 };
 
 // Disable selection on the entire page.
 function disableselect(e) { return false; }
 function reEnable() { return true; }
-document.onselectstart = new Function('return false');
+document.onselectstart = function() { return false; }
 if (window.sidebar) {
    document.onmousedown = disableselect;
    document.onclick = reEnable;
