@@ -8,9 +8,9 @@ MARKED_VAL = -3
 
 DISPLAY = {
    MINE_VAL: color.Red('X'),
-   HIDDEN_VAL: color.DarkGray(' '),
+   HIDDEN_VAL: color.DarkGray('_'),
    MARKED_VAL: color.LightRed('!'),
-   0: color.DarkGray('_')
+   0: color.DarkGray(' ')
 }
 
 def cached(fn):

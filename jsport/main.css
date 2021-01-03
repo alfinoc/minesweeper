@@ -3,27 +3,42 @@ body {
    color: white;
 }
 
+body, #grid {
+   font-family: 'Inconsolata', monospace;
+   margin: 0;
+}
+
 #grid {
-   font-family: monospace;
    margin: auto;
    cursor: crosshair;
    border-collapse: collapse;
    font-size: 13pt;
-   margin-top: 50px;
+   table-layout: fixed;
 }
 
 td, #grid td {
    height: 1em;
    width: 1em;
-   padding: 0.1em;
+   min-height: 1em;
+   min-width: 1em;
    text-align: center;
+
+   padding: 0.1em;
+   margin: 0;
 }
 
 #grid td:hover {
    color: white;
 }
 
-td[color="gray"] {
+div.help {
+   position: absolute;
+   bottom: 0.5em;
+   right: 0.5em;
+   font-style: italic;
+}
+
+td[color="gray"], div.help {
    color: #5D5D5D;
 }
 
@@ -50,4 +65,3 @@ td[color="pink"] {
 td[color="red"] {
    color: #C75646;
 }
-

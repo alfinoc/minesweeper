@@ -19,7 +19,8 @@ Board.DISPLAY[Board.HIDDEN_VAL] = ['gray', '&square;'];
 Board.DISPLAY[Board.MARKED_VAL] = ['pink', '&And;'];
 Board.DISPLAY[0] = ['gray', ' '];
 
-Board.init = function(mines, width, height) {
+Board.init = function(width, height, mineFactor) {
+   const mines = width * height * mineFactor
    Board.width = width;
    Board.height = height;
    var grid = [];

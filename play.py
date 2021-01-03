@@ -5,8 +5,8 @@ identity = lambda x : x
 
 class Simulation:
    def __init__(self):
-      mines = 3
-      self.player = Player(game=Minesweeper(mines=mines, width=5, height=5))
+      mines = 10
+      self.player = Player(game=Minesweeper(mines=mines, width=10, height=10))
       self.score = 0
       self.undiscovered = mines
 
@@ -53,9 +53,11 @@ class Simulation:
       while self.prompt():
          self.dump()
 
-   def probabilities(self):
-      prob = Problem(self.player.game.board, self.player.state())
-      return prob.probabilities(self.minesLeft())
+   def problem(self):
+      return Problem(self.player.game.board, self.player.state())
+
+   def c(self):
+      return self.problem()
 
    def s(self):
       self.guess()
@@ -63,7 +65,7 @@ class Simulation:
 
 sim = Simulation()
 
-#sim.auto()
-#sim.dump()
+sim.auto()
+sim.dump()
 
 

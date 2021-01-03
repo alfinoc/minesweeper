@@ -1,16 +1,46 @@
 <html>
 <head>
-   <title>lol</title>
+   <title>minesweeper</title>
+   <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Inconsolata" />
    <script type="text/javascript" src="game.js"></script>
    <script type="text/javascript">
+
+const TABLE_MARGIN_CELLS = 2;
+
+function setupWindowDimensions() {
+  const placeholder = document.getElementById('placeholder');
+  const cellWidthPx = placeholder.clientWidth;
+  const cellHeightPx = placeholder.clientHeight;
+
+  document.getElementById('grid').style.marginTop =
+      (cellHeightPx * TABLE_MARGIN_CELLS) + 'px';
+
+  return [window.innerWidth / cellWidthPx, window.innerHeight / cellHeightPx]
+    .map(cells => cells -= TABLE_MARGIN_CELLS * 2)
+    .map(cells => Math.floor(cells))
+    .map(cells => Math.min(cells, 1000))
+    .map(cells => Math.max(cells, 0));
+}
+
+function cleanUpPlaceholderCell() {
+  document.getElementById('grid').innerHTML = '';
+}
+
 window.onload = function() {
-   Player.init(200, 60, 30);
-   Player.dump();
+  const [width, height] = setupWindowDimensions();
+  cleanUpPlaceholderCell();
+  Player.init(width, height, 1 / 9);
+  //Player.auto();
+  Player.dump();
 };
+
    </script>
    <link rel="stylesheet" type="text/css" href="main.css">
 </head>
 <body>
-   <table id="grid"></table>
+ <table id="grid">
+    <tr><td id="placeholder">&square;</td></tr>
+  </table>
+  <div class="help">shift click to mark mine</div>
 </body>
 </html>
